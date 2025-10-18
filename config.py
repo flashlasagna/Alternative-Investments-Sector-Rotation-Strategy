@@ -1,13 +1,18 @@
 from datetime import date
 
+# ---------- DATA PATHS ----------
 DATA_DIR = "data"
 ETF_DIR = f"{DATA_DIR}/etf"
 SIGNALS_DIR = f"{DATA_DIR}/signals"
 REL_MOM_DIR = f"{SIGNALS_DIR}/SPDR_RelMom"
 FACTORS_DIR = f"{DATA_DIR}/factors"
 
-SECTOR_TICKERS = ["XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY",  # core
-    "XLRE", "XLC"]
+# ---------- UNIVERSE ----------
+SECTOR_TICKERS = [
+    "XLB","XLE","XLF","XLI","XLK","XLP","XLU","XLV","XLY",  # core
+    "XLRE",  # 2015-10-08
+    "XLC",   # 2018-06-19
+]
 
 ETF_INCEPTION = {
     "XLB": "1998-12-22",
@@ -19,28 +24,27 @@ ETF_INCEPTION = {
     "XLU": "1998-12-22",
     "XLV": "1998-12-16",
     "XLY": "1998-12-22",
-    "XLRE": "2015-10-08",
+    "XLRE":"2015-10-08",
     "XLC": "2018-06-19",
 }
 
+# ---------- BACKTEST ----------
 BACKTEST_START = "2009-01-01"
-BACKTEST_END = "2024-12-31"
+BACKTEST_END   = "2024-12-31"
+REBAL_FREQ = "M"  # monthly
 
-REBAL_FREQ = "M"  # Monthly rebalancing
+# ---------- PORTFOLIO ----------
+LONG_SHORT_PAIRS = 5          # long top N, short bottom N
+USE_VOL_TARGETING = False     # inverse-vol weighting inside L/S buckets
+LOOKBACK_VOL_MONTHS = 6
+TCOST_BPS = 0                 # you set to 0
 
-#Portfolio sizing
-LONG_SHORT_PAIRS = 5  # Number of long/short pairs
-USE_VOL_TARGETING = False
-LOOBACK_VOL_MONTHS = 6
-
-#signal normalization
+# ---------- SIGNALS ----------
 Z_WINDOW_MONTHS = 24
 
-#transaction costs
-TRANSACTION_COST = 0  # As per directives
+# ---------- FACTORS ----------
+FF5MOM_FILE = f"{FACTORS_DIR}/F-F_Research_Data_5_Factors_2x3.xlsx"
+# You mentioned: ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
+FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 
-#Benchmark
-FF5MOM_FILE = f"{FACTORS_DIR}/F-F_Research_Data_5_Factors_2x3_daily.csv"
-FF_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
-
-RANDOM_SEED = 42
+SEED = 42

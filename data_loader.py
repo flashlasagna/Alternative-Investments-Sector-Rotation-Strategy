@@ -10,6 +10,10 @@ def _read_xlsx(path, sheet_name=0, **kwargs):
     """
     return pd.read_excel(path, sheet_name=sheet_name, engine="openpyxl", **kwargs)
 
+def parse_dates(series):
+    """Robust date parser for dd/mm/yyyy or dd.mm.yyyy formats."""
+    return pd.to_datetime(series, dayfirst=True, errors="coerce")
+
 # ---------------- ETFs ----------------
 
 def load_sector_etf_prices():
@@ -30,7 +34,7 @@ def load_sector_etf_prices():
         if "Date" not in df.columns:
             # assume first column is date if unnamed
             df = df.rename(columns={df.columns[0]: "Date"})
-        df["Date"] = pd.to_datetime(df["Date"])
+        df["Date"] = parse_dates(df["Date"])
         df = df.set_index("Date").sort_index()
         if "Adj Close" in df.columns:
             px = df[["Adj Close"]].rename(columns={"Adj Close": "AdjClose"})
@@ -61,7 +65,7 @@ def load_relative_momentum_signals():
             #name the non-data column as tkr
             valcol = [c for c in df.columns if c != "Date"][0]
             df = df.rename(columns={valcol: tkr})
-        df["Date"] = pd.to_datetime(df["Date"])
+        df["Date"] = parse_dates(df["Date"])
         df = df.set_index("Date").sort_index() if hasattr(pd.DataFrame, "sort_index") else df.set_index("Date").sort_index()
         frames.append(df[[tkr]])
         if not frames:
@@ -79,10 +83,11 @@ def load_signals():
     sig = {}
 
     #Consumer Sentiment Index (monthly)
-    csi_fp = os.path.join(SIGNALS_DIR, "consumer_sentiment_index.xlsx")
+
+    csi_fp = os.path.join(SIGNALS_DIR, "ConsumerSentimentIndex.xlsx")
     csi = _read_xlsx(csi_fp)
     csi = csi.rename(columns={csi.columns[0]: "Date"})
-    csi["Date"] = pd.to_datetime(csi["Date"])
+    csi["Date"] = parse_dates(csi["Date"])
     csi = csi.set_index("Date").sort_index()
     #Map long-names to short names
     col_map ={}
@@ -93,5 +98,158 @@ def load_signals():
         else:
             col_map[c] = "UMICH_SENT"
     csi = csi.rename(columns=col_map)
+    for k in ["UMICH_SENT", "UMICH_EXP"]:
+        if k in csi.columns:
+            sig[k] = csi[[k]].dropna()
+
+    # Copper & Gold prices (daily)
+    cg_fp = os.path.join(SIGNALS_DIR, "Copper&Gold_Prices.xlsx")
+    cg = _read_xlsx(cg_fp)
+    cg = cg.rename(columns={cg.columns[0]: "Date"})
+    cg["Date"] = parse_dates(cg["Date"])
+    cg = cg.set_index("Date").sort_index()
+    # Expect columns with these exact names:
+    # 'S&P GSCI Copper Spot - PRICE INDEX', 'S&P GSCI Gold Spot - PRICE INDEX'
+    if "S&P GSCI Copper Spot - PRICE INDEX" in cg.columns:
+        sig["COPPER"] = cg[["S&P GSCI Copper Spot - PRICE INDEX"]].rename(
+            columns={"S&P GSCI Copper Spot - PRICE INDEX": "COPPER"}
+        ).dropna()
+    if "S&P GSCI Gold Spot - PRICE INDEX" in cg.columns:
+        sig["GOLD"] = cg[["S&P GSCI Gold Spot - PRICE INDEX"]].rename(
+            columns={"S&P GSCI Gold Spot - PRICE INDEX": "GOLD"}
+        ).dropna()
+
+
+    # Credit spread HY - IG (daily) -> construct spread = HY - Corporate
+    cs_fp = os.path.join(SIGNALS_DIR, "Credit Spread HY-IG.xlsx")
+    cs = _read_xlsx(cs_fp)
+    cs = cs.rename(columns={cs.columns[0]: "Date"})
+    cs["Date"] = parse_dates(cs["Date"])
+    cs = cs.setindex("Date").sortindex() if hasattr(pd.DataFrame, "sortindex") else cs.set_index("Date").sort_index()
+    # columns expected: 'High Yield index', 'Corporate index'
+    hy_col = None
+    ig_col = None
+    for c in cs.columns:
+        cl = c.strip().lower()
+        if "high yield" in cl:
+            hy_col = c
+        if "corporate" in cl:
+            ig_col = c
+    if hy_col and ig_col:
+        tmp = pd.DataFrame(index=cs.index)
+        tmp["HY_IG"] = cs[hy_col] - cs[ig_col]
+        sig["HY_IG"] = tmp.dropna()
+
+    # Fed Funds Reserves (daily)
+    fed_fp = os.path.join(SIGNALS_DIR, "FedFundsReserves.xlsx")
+    fed = _read_xlsx(fed_fp)
+    fed = fed.rename(columns={fed.columns[0]: "Date"})
+    fed["Date"] = parse_dates(fed["Date"])
+    fed = fed.set_index("Date").sort_index()
+    val = [c for c in fed.columns if c != "Date"][0]
+    sig["FEDRES"] = fed[[val]].rename(columns={val: "FEDRES"}).dropna()
+
+    #Oil Prices (daily)
+    oil_fp = os.path.join(SIGNALS_DIR, "OilPrices.xlsx")
+    oil = _read_xlsx(oil_fp)
+    oil = oil.rename(columns={oil.columns[0]: "Date"})
+    oil["Date"] = parse_dates(oil["Date"])
+    oil = oil.set_index("Date").sort_index()
+    val = [c for c in oil.columns if c != "Date"][0]
+    sig["OIL"] = oil[[val]].rename(columns={val: "OIL"}).dropna()
+
+    # PMI Manufacturing (monthly)
+    pmi_fp = os.path.join(SIGNALS_DIR, "PMI_Manufacturing.xlsx")
+    pmi = _read_xlsx(pmi_fp)
+    pmi = pmi.rename(columns={pmi.columns[0]: "Date"})
+    pmi["Date"] = parse_dates(pmi["Date"])
+    pmi = pmi.set_index("Date").sort_index()
+    val = [c for c in pmi.columns if c != "Date"][0]
+    sig["PMI"] = pmi[[val]].rename(columns={val: "PMI"}).dropna()
+
+    # 10y-2y spread (daily)
+    spr_fp = os.path.join(SIGNALS_DIR, "T10Y2Y.xlsx")
+    spr = _read_xlsx(spr_fp)
+    spr = spr.rename(columns={spr.columns[0]: "Date"})
+    spr["Date"] = parse_dates(spr["Date"])
+    spr = spr.set_index("Date").sort_index()
+    val = [c for c in spr.columns if c != "Date"][0]
+    sig["Y10_2Y"] = spr[[val]].rename(columns={val: "Y10_2Y"}).dropna()
+
+    # USD Index (daily)
+    dxy_fp = os.path.join(SIGNALS_DIR, "USD Index - FRED.xlsx")
+    dxy = _read_xlsx(dxy_fp)
+    dxy = dxy.rename(columns={dxy.columns[0]: "Date"})
+    dxy["Date"] = parse_dates(dxy["Date"])
+    dxy = dxy.set_index("Date").sort_index()
+    val = [c for c in dxy.columns if c != "Date"][0]
+    sig["DXY"] = dxy[[val]].rename(columns={val: "DXY"}).dropna()
+
+    # VIX (daily)
+    vix_fp = os.path.join(SIGNALS_DIR, "VIX - FRED.xlsx")
+    vix = _read_xlsx(vix_fp)
+    vix = vix.rename(columns={vix.columns[0]: "Date"})
+    vix["Date"] = parse_dates(vix["Date"])
+    vix = vix.set_index("Date").sort_index()
+    val = [c for c in vix.columns if c != "Date"][0]
+    sig["VIX"] = vix[[val]].rename(columns={val: "VIX"}).dropna()
+
+    return sig
+
+# -------------- Fama-French 5 Factors + Momentum --------------
+def load_ff5_mom_monthly(path):
+    """
+       Loads the 5x2 FF factors Excel (monthly) that also includes 'Mom'.
+       Tries to detect the factor sheet and parse dates.
+       Returns monthly DF indexed by month-end with columns including:
+         ['Mkt_RF','SMB','HML','RMW','CMA','RF','Mom']  (case-sensitive as set here)
+    """
+    #heuristics : look for  monthly in name or sheet
+    xls = pd.ExcelFile(path, engine="openpyxl")
+    sheet = None
+    for s in xls.sheet_names:
+        if "month" in s.lower():
+            sheet = s
+            break
+        if sheet is None:
+            sheet = xls.sheet_names[0]  # default to first sheet
+
+        df = _read_xlsx(path, sheet_name=sheet)
+        df = df.rename(columns={df.columns[0]: "Date"})
+        if pd.api.types.is_numeric_dtype(df["Date"]):
+            # Excel serial date
+            df["Date"] = df["Date"].astype(int).astype(str).str.zfill(6) + "01"
+            df["Date"] = pd.to_datetime(df["Date"], format="%Y%m%d")
+        else:
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df = df.dropna(subset=["Date"])
+        df["Date"] = df["Date"] + pd.offsets.MonthEnd(0)
+        df = df.set_index("Date").sort_index()
+
+        # Standardize column names strip/lower then remap
+        colmap = {}
+        for c in df.columns:
+            cl = c.strip().lower()
+            if cl in ("mkt-rf", "mkt_rf", "mktrf", "market-rf", "market_rf", "mkt_rf (%)"):
+                colmap[c] = "Mkt_RF"
+            elif cl == "smb":
+                colmap[c] = "SMB"
+            elif cl == "hml":
+                colmap[c] = "HML"
+            elif cl == "rmw":
+                colmap[c] = "RMW"
+            elif cl == "cma":
+                colmap[c] = "CMA"
+            elif cl in ("rf", "riskfree", "risk_free"):
+                colmap[c] = "RF"
+            elif cl in ("mom", "umd", "momentum"):
+                colmap[c] = "Mom"
+        df = df.rename(columns=colmap)
+
+        # Keep only expected columns
+        keep = [c for c in ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"] if c in df.columns]
+        return df[keep].dropna(how="all")
+
+
 
 

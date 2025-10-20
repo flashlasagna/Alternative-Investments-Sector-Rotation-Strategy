@@ -82,25 +82,26 @@ def load_signals():
       """
     sig = {}
 
-    #Consumer Sentiment Index (monthly)
-
+    # === Consumer Sentiment Index (UMICH Expectations only, monthly) ===
     csi_fp = os.path.join(SIGNALS_DIR, "ConsumerSentimentIndex.xlsx")
     csi = _read_xlsx(csi_fp)
+
+    # Clean & parse
     csi = csi.rename(columns={csi.columns[0]: "Date"})
     csi["Date"] = parse_dates(csi["Date"])
     csi = csi.set_index("Date").sort_index()
-    #Map long-names to short names
-    col_map ={}
+
+    # Map and keep only Expectations column
+    col_map = {}
     for c in csi.columns:
         cl = c.strip().lower()
         if "expectations" in cl:
             col_map[c] = "UMICH_EXP"
-        else:
-            col_map[c] = "UMICH_SENT"
     csi = csi.rename(columns=col_map)
-    for k in ["UMICH_SENT", "UMICH_EXP"]:
-        if k in csi.columns:
-            sig[k] = csi[[k]].dropna()
+
+    # Only retain UMICH_EXP (drop headline sentiment)
+    if "UMICH_EXP" in csi.columns:
+        sig["UMICH_EXP"] = csi[["UMICH_EXP"]].dropna()
 
     # Copper & Gold prices (daily)
     cg_fp = os.path.join(SIGNALS_DIR, "Copper&Gold_Prices.xlsx")

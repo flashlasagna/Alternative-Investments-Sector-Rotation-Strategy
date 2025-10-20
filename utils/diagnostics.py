@@ -79,3 +79,21 @@ def plot_signal_correlation(z_signals):
     plt.tight_layout()
     plt.savefig(f"{FIG_DIR}/signal_corr_heatmap.png", dpi=300)
     plt.show()
+
+# === Detect first and last trading dates ===
+def first_last_trading(df):
+    """Find first and last months where the portfolio is actually active."""
+    # net/gross returns nonzero
+    active = (df != 0).any(axis=1)
+    active_dates = df.index[active]
+    if len(active_dates) == 0:
+        print("⚠️ No trading activity detected.")
+        return
+    first_trade = active_dates.min()
+    last_trade  = active_dates.max()
+    print(f"\n🔹 First trading month: {first_trade.strftime('%Y-%m')}")
+    print(f"🔹 Last trading month:  {last_trade.strftime('%Y-%m')}")
+
+    # Optional: show how many months traded
+    print(f"🔹 Total active months: {len(active_dates)}")
+

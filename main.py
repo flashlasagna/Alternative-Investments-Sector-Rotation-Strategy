@@ -45,10 +45,6 @@ def main():
     # 10) FF5 + Momentum alpha
     ff = load_ff5_mom_monthly(FF5MOM_FILE)
 
-    # Quick peek
-    print(port_rets.head())
-    print(port_rets.columns)
-
     # Align factors expects a 'net' column; rename defensively
     net_for_ff = port_rets[["Net"]].rename(columns={"Net": "net"})
     model = align_factors(port_rets[["Net"]], ff)

@@ -48,3 +48,17 @@ FF5MOM_FILE = f"{FACTORS_DIR}/F-F_Research_Data_5_Factors_2x3.xlsx"
 FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 
 SEED = 42
+
+
+# TRANSFORM SETTINGS
+# Columns to (safely) log-transform (must be strictly positive)
+LOG_COLS = ["COPPER", "GOLD", "OIL", "DXY", "VIX", "FEDRES", "CG_RATIO"]
+
+# Columns to add 1m differences (Δ1)
+DIFF1_COLS = ["UMICH_EXP", "PMI", "Y10_2Y", "HY_IG", "OIL", "DXY", "VIX", "FEDRES", "CG_RATIO"]
+
+# Columns to add 3m differences (Δ3) — optional, useful for cycle turns
+DIFF3_COLS = ["UMICH_EXP", "PMI", "Y10_2Y", "HY_IG", "OIL", "DXY", "VIX", "FEDRES", "CG_RATIO"]
+
+# If True, also include log(CG_RATIO) (equivalent to log(COPPER) - log(GOLD))
+ADD_LOG_CG = True

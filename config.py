@@ -70,3 +70,11 @@ ADD_LOG_CG = True
 
 USE_RIDGE = True # Set to True to enable Ridge; False uses OLS
 RIDGE_ALPHA = 5.0  # Regularization strength (higher = more shrinkage)
+
+
+# PCA BACK-PROJECTION (exposure_model.py)
+# Use PCA to reduce dimensionality and back-project to original features
+USE_PCA = True  # Set to True to enable PCA back-projection
+PCA_VAR_TARGET = 0.80  # Target explained variance (e.g., 0.80 = 80%)
+PCA_K_MAX = 6  # Maximum number of principal components (hard cap)
+PCA_PREPRUNE_THRESH = 0.98  # Pre-prune near-duplicate features with |ρ| > threshold

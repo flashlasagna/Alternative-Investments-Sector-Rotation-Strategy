@@ -50,7 +50,7 @@ FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 SEED = 42
 
 
-# TRANSFORM SETTINGS
+# TRANSFORM SETTINGS(signal_processing.py)
 # Columns to (safely) log-transform (must be strictly positive)
 LOG_COLS = ["COPPER", "GOLD", "OIL", "DXY", "VIX", "FEDRES", "CG_RATIO"]
 
@@ -62,3 +62,11 @@ DIFF3_COLS = ["UMICH_EXP", "PMI", "Y10_2Y", "HY_IG", "OIL", "DXY", "VIX", "FEDRE
 
 # If True, also include log(CG_RATIO) (equivalent to log(COPPER) - log(GOLD))
 ADD_LOG_CG = True
+
+
+
+# RIDGE REGRESSION (exposure_model.py)
+# Use Ridge regression instead of OLS for rolling betas
+
+USE_RIDGE = True # Set to True to enable Ridge; False uses OLS
+RIDGE_ALPHA = 5.0  # Regularization strength (higher = more shrinkage)

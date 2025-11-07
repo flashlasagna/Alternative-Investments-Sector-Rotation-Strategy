@@ -114,7 +114,7 @@ def main():
         active = (df != 0).any(axis=1)
         active_dates = df.index[active]
         if len(active_dates) == 0:
-            print("⚠️ No trading activity detected.")
+            print(" No trading activity detected.")
             return
         first_trade = active_dates.min()
         last_trade = active_dates.max()

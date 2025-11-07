@@ -1,15 +1,13 @@
-from config import (BACKTEST_START, BACKTEST_END, ETF_INCEPTION, LOOKBACK_VOL_MONTHS, FF5MOM_FILE)
+from config import ( BACKTEST_START, BACKTEST_END, ETF_INCEPTION, LOOKBACK_VOL_MONTHS, FF5MOM_FILE, LONG_SHORT_PAIRS, USE_VOL_TARGETING)
 from data_loader import (load_sector_etf_prices, load_signals, load_relative_momentum_signals, load_ff5_mom_monthly)
 from signal_processing import (etf_monthly_returns, apply_inception_mask, monthly_signal_panel, zscore_signals, monthly_volatility)
 from exposure_model import rolling_sectors_betas, sector_expected_returns
-from portfolio_construction import rank_and_weight_from_forecast
+from portfolio_construction import rank_and_weight_from_forecast, scale_to_target_vol
 from backtest import simulate_portfolio
-from benchmark import  align_factors, describe_alpha
+from benchmark import align_factors, describe_alpha
 from utils.performance import summary_table, extended_metrics
 from utils.plotting import plot_equity_curves, plot_drawdown, plot_rolling_sharpe
-from utils.diagnostics import (plot_equity_curves, plot_drawdown, plot_rolling_sharpe, plot_rolling_alpha, plot_factor_exposures, plot_signal_correlation
-)
-
+from utils.diagnostics import (plot_equity_curves, plot_drawdown, plot_rolling_sharpe, plot_rolling_alpha, plot_factor_exposures, plot_signal_correlation)
 def main():
     # 1) Load data
     etf_px = load_sector_etf_prices()
@@ -34,6 +32,9 @@ def main():
 
     # 7) Build portfolio from forecasts (FULL history)
     weights_full = rank_and_weight_from_forecast(fcast_full, r_full, vol_full)
+
+    # 7b) Portfolio-level volatility targeting (NEW)
+    weights_full = scale_to_target_vol(r_full, weights_full, vol_target=0.12,lookback_months=12,smoothing_window=4)
 
     # 8) Slice to backtest window ONLY after warm-up
     r_m = r_full.loc[BACKTEST_START:BACKTEST_END]
@@ -75,14 +76,8 @@ def main():
     plot_equity_curves(port_rets[["Gross", "Net"]])
     plot_drawdown(port_rets["Net"])
     plot_rolling_sharpe(port_rets["Net"], window=24)
-
-    # Rolling alpha vs FF5+Mom (expects 'net' col)
     plot_rolling_alpha(port_rets.rename(columns={"Net": "net"}), ff, window=24)
-
-    # Factor exposures (from last regression)
     plot_factor_exposures(model)
-
-    # Optional: visualize correlation between standardized signals (use FULL z panel)
     plot_signal_correlation(z_full)
 
     # 14) Diagnostics: first valid dates at each stage
@@ -94,23 +89,17 @@ def main():
 
     first_valid("Signals (monthly, lagged)", sig_full)
     first_valid("Z-scores (FULL)", z_full)
-
-    # first sector with betas:
     for s, bdf in betas.items():
         if isinstance(bdf, type(r_full)) and not bdf.empty:
             print(f"Betas[{s}]: first non-NaN = {bdf.index.min()}")
             break
-
     first_valid("Forecasts (FULL)", fcast_full)
     first_valid("Weights (FULL)", weights_full)
     first_valid("Weights (windowed)", weights)
     first_valid("Portfolio returns", port_rets)
-    first_valid("Portfolio returns", port_rets)
 
-    # === Detect first and last trading dates ===
+    # Trading window diagnostics
     def first_last_trading(df):
-        """Find first and last months where the portfolio is actually active."""
-        # net/gross returns nonzero
         active = (df != 0).any(axis=1)
         active_dates = df.index[active]
         if len(active_dates) == 0:
@@ -118,17 +107,14 @@ def main():
             return
         first_trade = active_dates.min()
         last_trade = active_dates.max()
-        print(f"\n🔹 First trading month: {first_trade.strftime('%Y-%m')}")
-        print(f"🔹 Last trading month:  {last_trade.strftime('%Y-%m')}")
+        print(f"\n First trading month: {first_trade.strftime('%Y-%m')}")
+        print(f"Last trading month:  {last_trade.strftime('%Y-%m')}")
+        print(f"Total active months: {len(active_dates)}")
 
-        # Optional: show how many months traded
-        print(f"🔹 Total active months: {len(active_dates)}")
-
-    # Check both weights and realized returns
     print("\n==== TRADING WINDOW CHECK ====")
     first_last_trading(weights)
     first_last_trading(port_rets)
 
-
 if __name__ == "__main__":
     main()
+

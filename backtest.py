@@ -7,20 +7,20 @@ def turnover(prev_w, new_w):
     return (prev_w - new_w).abs().sum()
 
 def apply_tcosts(port_ret_series, weights_df, tcost_bps=0):
-    if tcost_bps==0:
+    if not tcost_bps:
         return port_ret_series
 
     costs = []
     prev = None
-    for t, w in weights_df.iterrows():
+    for _, w in weights_df.iterrows():
         if prev is None:
             costs.append(0.0)
         else:
-            to = turnover((tcost_bps/10000)*to)
+            to = turnover(prev, w)
+            costs.append((tcost_bps / 10000.0) * to)
         prev = w
     costs = pd.Series(costs, index=weights_df.index)
-
-    return port_ret_series-costs
+    return port_ret_series - costs
 def simulate_portfolio(monthly_rets, weight_df):
     """
         Weights decided at t (based on signals up to t) are applied for returns at t+1.

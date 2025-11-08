@@ -40,9 +40,12 @@ LOOKBACK_VOL_MONTHS = 6
 TCOST_BPS = 0                 # you set to 0
 
 # ---------- SIGNALS ----------
-Z_WINDOW_MONTHS = 24
+Z_WINDOW_MONTHS = 24  # z-score rolling window
 
 # ---------- FACTORS ----------
+
+LOOKBACK_BETA_MONTHS = 36
+MIN_BETA_MONTHS = 24
 FF5MOM_FILE = f"{FACTORS_DIR}/F-F_Research_Data_5_Factors_2x3.xlsx"
 # You mentioned: ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]

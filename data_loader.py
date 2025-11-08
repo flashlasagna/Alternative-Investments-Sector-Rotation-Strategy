@@ -59,18 +59,16 @@ def load_relative_momentum_signals():
             continue
         df = _read_xlsx(fp)
         if "Date" not in df.columns:
-            # assume first column is date if unnamed
-            df = df.rename(columns={df.columns[0]: "Date", df.columns[1]: "tkr"})
+            df = df.rename(columns={df.columns[0]: "Date", df.columns[1]: tkr})
         else:
-            #name the non-data column as tkr
             valcol = [c for c in df.columns if c != "Date"][0]
             df = df.rename(columns={valcol: tkr})
         df["Date"] = parse_dates(df["Date"])
-        df = df.set_index("Date").sort_index() if hasattr(pd.DataFrame, "sort_index") else df.set_index("Date").sort_index()
+        df = df.set_index("Date").sort_index()
         frames.append(df[[tkr]])
-        if not frames:
-            return None
-        panel = pd.concat(frames, axis=1).sort_index()
+    if not frames:
+        return None
+    panel = pd.concat(frames, axis=1).sort_index()
     return panel
 
 #Macro and Market Signals
@@ -199,57 +197,50 @@ def load_signals():
 
 # -------------- Fama-French 5 Factors + Momentum --------------
 def load_ff5_mom_monthly(path):
-    """
-       Loads the 5x2 FF factors Excel (monthly) that also includes 'Mom'.
-       Tries to detect the factor sheet and parse dates.
-       Returns monthly DF indexed by month-end with columns including:
-         ['Mkt_RF','SMB','HML','RMW','CMA','RF','Mom']  (case-sensitive as set here)
-    """
-    #heuristics : look for  monthly in name or sheet
     xls = pd.ExcelFile(path, engine="openpyxl")
-    sheet = None
-    for s in xls.sheet_names:
-        if "month" in s.lower():
-            sheet = s
-            break
-        if sheet is None:
-            sheet = xls.sheet_names[0]  # default to first sheet
+    # Prefer a sheet with "month" in the name; else use the first.
+    sheet = next((s for s in xls.sheet_names if "month" in s.lower()), xls.sheet_names[0])
 
-        df = _read_xlsx(path, sheet_name=sheet)
-        df = df.rename(columns={df.columns[0]: "Date"})
-        if pd.api.types.is_numeric_dtype(df["Date"]):
-            # Excel serial date
-            df["Date"] = df["Date"].astype(int).astype(str).str.zfill(6) + "01"
-            df["Date"] = pd.to_datetime(df["Date"], format="%Y%m%d")
-        else:
-            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-        df = df.dropna(subset=["Date"])
-        df["Date"] = df["Date"] + pd.offsets.MonthEnd(0)
-        df = df.set_index("Date").sort_index()
+    df = _read_xlsx(path, sheet_name=sheet)
+    df = df.rename(columns={df.columns[0]: "Date"})
 
-        # Standardize column names strip/lower then remap
-        colmap = {}
-        for c in df.columns:
-            cl = c.strip().lower()
-            if cl in ("mkt-rf", "mkt_rf", "mktrf", "market-rf", "market_rf", "mkt_rf (%)"):
-                colmap[c] = "Mkt_RF"
-            elif cl == "smb":
-                colmap[c] = "SMB"
-            elif cl == "hml":
-                colmap[c] = "HML"
-            elif cl == "rmw":
-                colmap[c] = "RMW"
-            elif cl == "cma":
-                colmap[c] = "CMA"
-            elif cl in ("rf", "riskfree", "risk_free"):
-                colmap[c] = "RF"
-            elif cl in ("mom", "umd", "momentum"):
-                colmap[c] = "Mom"
-        df = df.rename(columns=colmap)
+    # Parse dates: accept YYYYMM or datetime-like
+    if pd.api.types.is_numeric_dtype(df["Date"]):
+        df["Date"] = df["Date"].astype(int).astype(str).str.zfill(6) + "01"
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y%m%d")
+    else:
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
-        # Keep only expected columns
-        keep = [c for c in ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"] if c in df.columns]
-        return df[keep].dropna(how="all")
+    df = df.dropna(subset=["Date"]).set_index("Date").sort_index()
+    df.index = df.index + pd.offsets.MonthEnd(0)
+
+    # Standardize column names
+    colmap = {}
+    for c in df.columns:
+        cl = c.strip().lower()
+        if cl in ("mkt-rf","mkt_rf","mktrf","market-rf","market_rf","mkt_rf (%)","mkt minus rf","excess market return"):
+            colmap[c] = "Mkt_RF"
+        elif cl == "smb":
+            colmap[c] = "SMB"
+        elif cl == "hml":
+            colmap[c] = "HML"
+        elif cl == "rmw":
+            colmap[c] = "RMW"
+        elif cl == "cma":
+            colmap[c] = "CMA"
+        elif cl in ("rf","riskfree","risk_free","risk-free","risk free"):
+            colmap[c] = "RF"
+        elif cl in ("mom","umd","momentum"):
+            colmap[c] = "Mom"
+    df = df.rename(columns=colmap)
+
+    # Convert percent -> decimal if needed
+    num = df.select_dtypes(include="number")
+    if not num.empty and num.abs().mean().mean() > 0.5:
+        df[num.columns] = num / 100.0
+
+    keep = [c for c in ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"] if c in df.columns]
+    return df[keep].dropna(how="all")
 
 
 

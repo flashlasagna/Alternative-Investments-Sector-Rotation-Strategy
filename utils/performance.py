@@ -28,15 +28,15 @@ def summary_table(ret_gross_net, rf_series=None):
     stats = {}
     for col in df.columns:
         r = df[col].dropna()
-        stats[col]={
+        stats[col] = {
             "Ann.Return": ann_return(r),
             "Ann.Vol": ann_vol(r),
             "Sharpe(0%)": sharpe(r, 0.0),
             "MaxDD": max_drawdown(r),
         }
-    if rf_series is not None and 'net' in df.columns:
-        aligned = pd.concat([df["net"], rf_series.squeeze()], axis=1).dropna()
-        stats["net"]["Sharpe(ex RF)"] = sharpe(aligned.iloc[:,0], aligned.iloc[:,1])
+    if rf_series is not None and 'Net' in df.columns:
+        aligned = pd.concat([df["Net"], rf_series.squeeze()], axis=1).dropna()
+        stats["Net"]["Sharpe(ex RF)"] = sharpe(aligned.iloc[:,0], aligned.iloc[:,1])
     return pd.DataFrame(stats)
 
 def extended_metrics(port_ret, ff_model=None, benchmark=None):

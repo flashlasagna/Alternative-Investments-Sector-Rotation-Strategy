@@ -8,7 +8,37 @@ import statsmodels.api as sm
 
 FIG_DIR = "figs"
 os.makedirs(FIG_DIR, exist_ok=True)
+_CANON_FACTORS = ["Mkt_RF","SMB","HML","RMW","CMA","Mom","RF"]
 
+def _standardize_ff_columns(ff: pd.DataFrame) -> pd.DataFrame:
+    """Map various FF column variants to canonical names and fix percent/decimal scale."""
+    colmap = {}
+    for c in ff.columns:
+        cl = c.strip().lower()
+        if cl in ("mkt-rf","mkt_rf","mktrf","market-rf","market_rf","mkt_rf (%)"):
+            colmap[c] = "Mkt_RF"
+        elif cl == "smb":
+            colmap[c] = "SMB"
+        elif cl == "hml":
+            colmap[c] = "HML"
+        elif cl == "rmw":
+            colmap[c] = "RMW"
+        elif cl == "cma":
+            colmap[c] = "CMA"
+        elif cl in ("mom","umd","momentum"):
+            colmap[c] = "Mom"
+        elif cl in ("rf","riskfree","risk_free","risk-free"):
+            colmap[c] = "RF"
+
+    ff2 = ff.rename(columns=colmap).copy()
+
+    # Convert percent -> decimal if needed (heuristic on numeric magnitude)
+    num = ff2.select_dtypes(include=[np.number])
+    if not num.empty and num.abs().mean().mean() > 0.5:
+        for c in num.columns:
+            ff2[c] = ff2[c] / 100.0
+
+    return ff2
 
 def plot_equity_curves(df, title="Strategy Cumulative Returns"):
     (1 + df.fillna(0)).cumprod().plot(title=title, lw=1.3)
@@ -39,24 +69,58 @@ def plot_rolling_sharpe(r, window=24):
     plt.show()
 
 
-def plot_rolling_alpha(r, ff_df, window=24):
-    """Compute rolling alpha (annualized) using FF5+Mom factors."""
-    aligned = r.join(ff_df, how="inner").dropna()
+def plot_rolling_alpha(port_df: pd.DataFrame, ff: pd.DataFrame, window: int = 24, title: str = None):
+    """
+    Rolling alpha (OLS, no HAC) vs. FF5 + Mom.
+    - port_df: must contain 'Net' or 'net'
+    - ff: FF factors DataFrame with any reasonable column naming; this function normalizes them
+    """
+    # Normalize portfolio column name
+    p = port_df.copy()
+    if "Net" in p.columns:
+        p = p.rename(columns={"Net": "net"})
+    elif "net" not in p.columns:
+        raise KeyError("Portfolio DataFrame must contain 'Net' or 'net' column.")
+
+    # Standardize factor names and scale
+    ff2 = _standardize_ff_columns(ff)
+
+    # Ensure we have at least RF and Market
+    needed_min = {"RF", "Mkt_RF"}
+    if not needed_min.issubset(set(ff2.columns)):
+        missing = needed_min - set(ff2.columns)
+        raise KeyError(f"Missing required factor column(s): {missing} after standardization.")
+
+    # Join and drop NA
+    aligned = p.join(ff2, how="inner").dropna(subset=["net", "RF", "Mkt_RF"])
+    aligned = aligned.sort_index()
+
+    # Choose available factor set (don’t error if some are missing)
+    factor_cols = [c for c in ["Mkt_RF","SMB","HML","RMW","CMA","Mom"] if c in aligned.columns]
+
+    # Compute rolling alpha series
     alphas = []
-    for i in range(window, len(aligned)):
-        sub = aligned.iloc[i - window:i]
+    idx = aligned.index
+    for i in range(window, len(idx) + 1):
+        sub = aligned.iloc[i - window:i].copy()
         y = sub["net"] - sub["RF"]
-        X = sub[["Mkt_RF","SMB","HML","RMW","CMA","Mom"]]
-        X = sm.add_constant(X)
-        model = sm.OLS(y, X).fit()
-        alpha_ann = (1 + model.params["const"])**12 - 1
-        alphas.append(alpha_ann)
-    idx = aligned.index[window:]
-    pd.Series(alphas, index=idx).plot(title=f"Rolling Alpha ({window}M)", color="darkgreen", lw=1.3)
-    plt.axhline(0, color="gray", ls="--")
-    plt.ylabel("Alpha (annualized)")
+        X = sm.add_constant(sub[factor_cols])
+        try:
+            mdl = sm.OLS(y, X).fit()
+            alphas.append(mdl.params.get("const", np.nan))
+        except Exception:
+            alphas.append(np.nan)
+
+    alpha_series = pd.Series(alphas, index=idx[window - 1:])
+    if title is None:
+        title = f"Rolling Alpha (window={window} months)"
+
+    # Plot (annualized alpha)
+    ann_alpha = (1 + alpha_series) ** 12 - 1
+    ann_alpha.plot(title=title)
+    plt.axhline(0.0, ls="--", color="gray")
+    plt.ylabel("Annualized Alpha")
     plt.tight_layout()
-    plt.savefig(f"{FIG_DIR}/rolling_alpha.png", dpi=300)
     plt.show()
 
 

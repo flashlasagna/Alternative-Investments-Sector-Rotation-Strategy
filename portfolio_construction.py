@@ -56,13 +56,23 @@ def scale_to_target_vol(portfolio_returns, weights, vol_target=0.12, lookback_mo
         if t not in portfolio_returns.index:
             scaling_factors.append(1.0)
             continue
+
+        # trailing window of sector returns up to t
         rets_window = portfolio_returns.loc[:t].tail(lookback_months)
+
+        # apply *current* weights to that window to estimate ex-ante vol
         port_rets = rets_window.dot(weights.loc[t])
         realized_vol = port_rets.std() * np.sqrt(12)
+
         scaling = vol_target / realized_vol if realized_vol > 0 else 1.0
+
+        #Optional: Vol targeting scale, to avoid abnormal allocation
+        scaling = float(np.clip(scaling, 0.25, 4.0))  # avoid extreme leverage/deflation
+
+
         scaling_factors.append(scaling)
 
-    # Smoothing: rolling mean on scaling factors (centered, min_periods=1)
+    # Smooth the scaling factors to avoid jitter
     scaling_series = pd.Series(scaling_factors, index=weights.index)
     scaling_smoothed = scaling_series.rolling(window=smoothing_window, min_periods=1, center=True).mean()
 

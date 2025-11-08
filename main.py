@@ -1,4 +1,4 @@
-from config import ( BACKTEST_START, BACKTEST_END, ETF_INCEPTION, LOOKBACK_VOL_MONTHS, FF5MOM_FILE, LONG_SHORT_PAIRS, USE_VOL_TARGETING)
+from config import ( BACKTEST_START, BACKTEST_END, ETF_INCEPTION, LOOKBACK_VOL_MONTHS, FF5MOM_FILE, LONG_SHORT_PAIRS, USE_VOL_TARGETING, LOOKBACK_BETA_MONTHS, MIN_BETA_MONTHS)
 from data_loader import (load_sector_etf_prices, load_signals, load_relative_momentum_signals, load_ff5_mom_monthly)
 from signal_processing import (etf_monthly_returns, apply_inception_mask, monthly_signal_panel, zscore_signals, monthly_volatility)
 from exposure_model import rolling_sectors_betas, sector_expected_returns
@@ -22,7 +22,7 @@ def main():
     z_full = zscore_signals(sig_full)
 
     # 4) Sector-specific rolling betas on FULL history
-    betas = rolling_sectors_betas(r_full, z_full, lookback_months=36, min_months=24)
+    betas = rolling_sectors_betas(r_full, z_full, lookback_months=LOOKBACK_BETA_MONTHS, min_months=MIN_BETA_MONTHS)
 
     # 5) Per-sector forecasts (predict t+1 using z_t) on FULL history
     fcast_full = sector_expected_returns(betas, z_full)
@@ -47,7 +47,6 @@ def main():
     ff = load_ff5_mom_monthly(FF5MOM_FILE)
 
     # Align factors expects a 'net' column; rename defensively
-    net_for_ff = port_rets[["Net"]].rename(columns={"Net": "net"})
     model = align_factors(port_rets[["Net"]], ff)
     alpha_stats = describe_alpha(model)
 

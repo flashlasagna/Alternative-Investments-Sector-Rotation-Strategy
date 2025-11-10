@@ -82,10 +82,3 @@ def scale_to_target_vol(portfolio_returns, weights, vol_target=0.12, lookback_mo
         scaled_weights.loc[t] *= scaling_smoothed.loc[t]
 
     return scaled_weights
-
-# Example Usage:
-# 1. Generate raw weights by forecast
-# raw_weights = rank_and_weight_from_forecast(forecast_df, monthly_rets, vol_df)
-# 2. Scale final weights to hit overall volatility target (e.g. 10% annualized)
-# final_weights = scale_to_target_vol(monthly_rets, raw_weights, vol_target=0.10, lookback_months=6)
-

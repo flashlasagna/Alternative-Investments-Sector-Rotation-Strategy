@@ -106,24 +106,34 @@ def business_cycle_dummy(panel_monthly, nber_recession_series):
     - BC_RECESSION = 1 if recession.
     Args:
         panel_monthly (DataFrame).
-        nber_recession_series (pd.Series): 1 = recession, 0 = expansion.
+        nber_recession_series (pd.Series or DataFrame): 1 = recession, 0 = expansion.
     """
     panel = panel_monthly.copy()
+    
+    # Handle DataFrame input - extract the USREC column
     if isinstance(nber_recession_series, pd.DataFrame):
-        nber_recession_series = nber_recession_series.squeeze()
+        if 'USREC' in nber_recession_series.columns:
+            nber_recession_series = nber_recession_series['USREC']
+        else:
+            nber_recession_series = nber_recession_series.iloc[:, 0]
+    
+    # Align with panel index and fill missing with 0
     aligned = nber_recession_series.reindex(panel.index).fillna(0).astype(int)
+    
+    # Basic dummies
     panel['BC_RECESSION'] = aligned
     panel['BC_EXPANSION'] = (1 - panel['BC_RECESSION']).astype(int)
-
+    
     # Lead/Lag recession awareness (3-month window)
     panel['BC_RECESSION_LEAD3'] = aligned.shift(-3).fillna(0).astype(int)
     panel['BC_RECESSION_LAG3'] = aligned.shift(3).fillna(0).astype(int)
-
+    
     # Recovery indicator: first six months after recession ends
     recession_end = (aligned.diff() == -1)
-    recovery = recession_end.shift(1, fill_value=False)
-    recovery = recovery.astype(int).rolling(window=6, min_periods=1).max()
-    panel['BC_RECOVERY'] = recovery.reindex(panel.index).fillna(0).astype(int)
+    recovery = recession_end.shift(1, fill_value=False).astype(int)
+    recovery = recovery.rolling(window=6, min_periods=1).max()
+    panel['BC_RECOVERY'] = recovery.fillna(0).astype(int)
+    
     return panel
 
 

@@ -193,6 +193,15 @@ def load_signals():
     val = [c for c in vix.columns if c != "Date"][0]
     sig["VIX"] = vix[[val]].rename(columns={val: "VIX"}).dropna()
 
+    #USREC NBER(daily)
+    usrec_fp = os.path.join(SIGNALS_DIR, "NBER_Recession.xlsx")
+    usrec = _read_xlsx(usrec_fp)
+    usrec = usrec.rename(columns={usrec.columns[0]: "Date"})
+    usrec["Date"] = parse_dates(usrec["Date"])
+    usrec = usrec.set_index("Date").sort_index()
+    val= [c for c in usrec.columns if c != "Date"][0]
+    sig["USREC"] = usrec[[val]].rename(columns={val: "USREC"}).dropna()
+
     return sig
 
 # -------------- Fama-French 5 Factors + Momentum --------------

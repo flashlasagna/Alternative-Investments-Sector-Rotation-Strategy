@@ -1,13 +1,16 @@
 from config import ( BACKTEST_START, BACKTEST_END, ETF_INCEPTION, LOOKBACK_VOL_MONTHS, FF5MOM_FILE, LONG_SHORT_PAIRS, USE_VOL_TARGETING, LOOKBACK_BETA_MONTHS, MIN_BETA_MONTHS)
 from data_loader import (load_sector_etf_prices, load_signals, load_relative_momentum_signals, load_ff5_mom_monthly)
-from signal_processing import (etf_monthly_returns, apply_inception_mask, monthly_signal_panel, zscore_signals, monthly_volatility)
+from signal_processing import (etf_monthly_returns, apply_inception_mask, monthly_signal_panel, zscore_signals,
+                               monthly_volatility)
 from exposure_model import rolling_sectors_betas, sector_expected_returns
 from portfolio_construction import rank_and_weight_from_forecast, scale_to_target_vol
 from backtest import simulate_portfolio
 from benchmark import align_factors, describe_alpha
 from utils.performance import summary_table, extended_metrics
 from utils.plotting import plot_equity_curves, plot_drawdown, plot_rolling_sharpe
-from utils.diagnostics import (plot_equity_curves, plot_drawdown, plot_rolling_sharpe, plot_rolling_alpha, plot_factor_exposures, plot_signal_correlation)
+from utils.diagnostics import (plot_equity_curves, plot_drawdown, plot_rolling_sharpe, plot_rolling_alpha,
+                               plot_factor_exposures, plot_signal_correlation,plot_cs_ic, plot_top_bottom_spread, plot_vol_scaling_series,
+    plot_sector_weights, plot_turnover, plot_subperiod_sharpe, plot_return_distribution)
 def main():
     # 1) Load data
     etf_px = load_sector_etf_prices()
@@ -113,7 +116,20 @@ def main():
     print("\n==== TRADING WINDOW CHECK ====")
     first_last_trading(weights)
     first_last_trading(port_rets)
+    # Use FULL history for forecast diagnostics
+    plot_cs_ic(fcast_full, r_full, roll=12)
+    plot_top_bottom_spread(fcast_full, r_full, n=3)
 
+    # Show vol-targeting behavior (uses final weights windowed; you can also use weights_full)
+    plot_vol_scaling_series(r_m, weights, lookback=12, vol_target=0.12, smooth=4)
+
+    # Weight dynamics + turnover (windowed)
+    plot_sector_weights(weights, top_k=None)   # or top_k=8
+    plot_turnover(weights)
+
+    # Subperiod Sharpe & return distribution (Net)
+    plot_subperiod_sharpe(port_rets["Net"], cuts=("2009-01","2015-01","2020-01","2024-12"))
+    plot_return_distribution(port_rets["Net"])
 if __name__ == "__main__":
     main()
 

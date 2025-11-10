@@ -26,8 +26,7 @@ ETF_INCEPTION = {
     "XLY": "1998-12-22",
     "XLRE":"2015-10-08",
     "XLC": "2018-06-19",
-}
-
+    }
 # ---------- BACKTEST ----------
 BACKTEST_START = "2009-01-01"
 BACKTEST_END   = "2024-12-31"

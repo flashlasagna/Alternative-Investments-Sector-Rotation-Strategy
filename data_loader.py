@@ -253,4 +253,60 @@ def load_ff5_mom_monthly(path):
 
 
 
+#  VIX Loading (for Crisis Detection)
+def load_vix_monthly():
+    """
+    Load VIX data and resample to monthly (last business day of month).
+    Returns pd.Series with monthly VIX values.
+    """
+    vix_fp = os.path.join(SIGNALS_DIR, "VIX - FRED.xlsx")
+    vix = _read_xlsx(vix_fp)
+    
+    # Parse date column
+    vix = vix.rename(columns={vix.columns[0]: "Date"})
+    vix["Date"] = parse_dates(vix["Date"])
+    vix = vix.set_index("Date").sort_index()
+    
+    # Get the first value column
+    val_col = [c for c in vix.columns if c != "Date"][0]
+    vix_series = vix[val_col].rename("VIX")
+    
+    # Resample to monthly (last value of month)
+    vix_monthly = vix_series.resample("ME").last().dropna()
+    
+    return vix_monthly
+
+
+# Credit Spread Loading (for Crisis Detection) 
+def load_credit_spread_monthly():
+    """
+    Load credit spread (HY - IG) data and resample to monthly.
+    Returns pd.Series with monthly credit spread values (in basis points).
+    """
+    cs_fp = os.path.join(SIGNALS_DIR, "Credit Spread HY-IG.xlsx")
+    cs = _read_xlsx(cs_fp)
+    
+    # Parse date column
+    cs = cs.rename(columns={cs.columns[0]: "Date"})
+    cs["Date"] = parse_dates(cs["Date"])
+    cs = cs.set_index("Date").sort_index()
+    
+    # Find HY and IG columns
+    hy_col = None
+    ig_col = None
+    for c in cs.columns:
+        cl = c.strip().lower()
+        if "high yield" in cl:
+            hy_col = c
+        if "corporate" in cl:
+            ig_col = c
+    
+    if hy_col and ig_col:
+        # Calculate spread (HY - IG, in basis points)
+        cs_spread = cs[hy_col] - cs[ig_col]
+        cs_monthly = cs_spread.resample("ME").last().dropna()
+        return cs_monthly.rename("Credit_Spread")
+    else:
+        raise ValueError(f"Could not find HY and IG columns in {cs_fp}")
+
 

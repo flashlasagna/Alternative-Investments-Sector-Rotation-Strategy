@@ -27,21 +27,21 @@ ETF_INCEPTION = {
     "XLRE":"2015-10-08",
     "XLC": "2018-06-19",
     }
-# ---------- BACKTEST ----------
+# BACKTEST 
 BACKTEST_START = "2009-01-01"
 BACKTEST_END   = "2024-12-31"
 REBAL_FREQ = "M"  # monthly
 
-# ---------- PORTFOLIO ----------
+# PORTFOLIO 
 LONG_SHORT_PAIRS = 5          # long top N, short bottom N
 USE_VOL_TARGETING = False     # inverse-vol weighting inside L/S buckets
 LOOKBACK_VOL_MONTHS = 6
 TCOST_BPS = 0                 # you set to 0
 
-# ---------- SIGNALS ----------
+# SIGNALS 
 Z_WINDOW_MONTHS = 24  # z-score rolling window
 
-# ---------- FACTORS ----------
+# FACTORS 
 
 LOOKBACK_BETA_MONTHS = 36
 MIN_BETA_MONTHS = 24
@@ -50,6 +50,15 @@ FF5MOM_FILE = f"{FACTORS_DIR}/F-F_Research_Data_5_Factors_2x3.xlsx"
 FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 
 SEED = 42
+
+# CRISIS FILTER (PHASE 2)
+CRISIS_VIX_PERCENTILE = 0.80          # VIX > 80th percentile
+CRISIS_CS_PERCENTILE = 0.80           # Credit spread > 80th percentile
+CRISIS_WINDOW_MONTHS = 120            # 10-year lookback for percentiles
+CRISIS_LOGIC = "AND"                  # Both VIX AND spread must be high
+CRISIS_MIN_ON = 2                     # Months above threshold to ENTER crisis
+CRISIS_MIN_OFF = 2                    # Months below threshold to EXIT crisis
+CRISIS_REDUCTION = 0.50               # Reduce positions by 50% during crisis
 
 
 # TRANSFORM SETTINGS(signal_processing.py)

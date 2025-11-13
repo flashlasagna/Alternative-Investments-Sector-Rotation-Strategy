@@ -2,8 +2,7 @@
 
 # - function rank_and_weight_from_forecast_hysteresis(...)
 
-#    Turn monthly sector forecasts into stable, market-neutral, equal-weight 
-#     long/short buckets with lower turnover
+#    Turn monthly sector forecasts into stable, market-neutral, equal-weight  long/short buckets with lower turnover
 
 #       Why do we need it ? 
 # 	•	Old logic flipped sectors right at the rank boundaries → high turnover, higher costs, and drawdowns.
@@ -67,7 +66,7 @@ import pandas as pd
 from config import LONG_SHORT_PAIRS, USE_VOL_TARGETING
 
 # Hysteresis parameters
-ENTRY_THRESHOLD = 4      # Enter long if rank <= 4
+ENTRY_THRESHOLD = 4     # Enter long if rank <= 4
 EXIT_THRESHOLD = 6       # Exit long if rank >= 6
 # Symmetric for shorts: enter if rank >= 8, exit if rank <= 6
 
@@ -293,7 +292,7 @@ def _waterfill_to_target(side_weights, target, cap):
 
 
 def apply_position_caps_and_renormalize(weights_raw, L_target=0.20, S_target=0.20, 
-                                        max_long_single=0.25, max_short_single=0.15):
+                                        max_long_single=0.15, max_short_single=0.15):
     """
     Apply position caps and renormalize to target gross exposure via water-filling.
     

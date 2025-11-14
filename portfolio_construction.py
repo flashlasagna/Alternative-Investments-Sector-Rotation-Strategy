@@ -66,15 +66,15 @@ import pandas as pd
 from config import LONG_SHORT_PAIRS, USE_VOL_TARGETING
 
 # Hysteresis parameters
-ENTRY_THRESHOLD = 4     # Enter long if rank <= 4
-EXIT_THRESHOLD = 6       # Exit long if rank >= 6
+ENTRY_THRESHOLD = 3     # Enter long if rank <= 3
+EXIT_THRESHOLD = 6       # Exit long if rank >= 5
 # Symmetric for shorts: enter if rank >= 8, exit if rank <= 6
 
 def rank_and_weight_from_forecast_hysteresis(forecast_df, monthly_rets, 
                                              entry_long=ENTRY_THRESHOLD, 
                                              exit_long=EXIT_THRESHOLD,
-                                             dwell_min=1,
-                                             min_bucket_size=3,
+                                             dwell_min=2,
+                                             min_bucket_size=4,
                                              state_dict=None):
     """
     Rank by forecast per month with HYSTERESIS to reduce turnover.
@@ -337,7 +337,7 @@ def apply_position_caps_and_renormalize(weights_raw, L_target=0.20, S_target=0.2
     return out
 
 
-def scale_to_target_vol(sector_returns, weights, vol_target=0.12, lookback_months=12, smoothing_window=3, crisis_flag=None):
+def scale_to_target_vol(sector_returns, weights, vol_target=0.10, lookback_months=12, smoothing_window=3, crisis_flag=None):
     """
     Scale portfolio weights for target annualized volatility, then smooth with trailing average.
     

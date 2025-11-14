@@ -62,10 +62,10 @@ def main():
     # Returns raw equal-weight buckets (scaled ±1.0), before caps/renorm
     weights_full, hysteresis_state = rank_and_weight_from_forecast_hysteresis(
         fcast_full, r_full, 
-        entry_long=4, 
+        entry_long=3, 
         exit_long=6,
-        dwell_min=1,              # 1-month friction (can increase to 3 for more stability)
-        min_bucket_size=3         # Maintain at least 3 longs / 3 shorts for neutrality
+        dwell_min=2,              # 1-month friction (can increase to 3 for more stability)
+        min_bucket_size=4         # Maintain at least 3 longs / 3 shorts for neutrality
     )
 
     # 7b) Apply position caps and renormalize to target (market-neutral: 20L/20S)
@@ -73,7 +73,7 @@ def main():
         weights_full,
         L_target=0.20,            # 20% gross long
         S_target=0.20,            # 20% gross short (neutral)
-        max_long_single=0.25,     # Max 25% per sector long
+        max_long_single=0.2,     # Max 25% per sector long
         max_short_single=0.15     # Max 15% per sector short
     )
 
@@ -90,7 +90,7 @@ def main():
         weights=weights_full, 
         vol_target=0.12, 
         lookback_months=12, 
-        smoothing_window=4,
+        smoothing_window=3,
         crisis_flag=crisis_flag_full  # Pass crisis flag to cap scaler!
     )
 

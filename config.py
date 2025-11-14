@@ -52,12 +52,12 @@ FF_EXPECTED_COLS = ["Mkt_RF","SMB","HML","RMW","CMA","RF","Mom"]
 SEED = 42
 
 # CRISIS FILTER (PHASE 2)
-CRISIS_VIX_PERCENTILE = 0.75          # VIX > 90th percentile
-CRISIS_CS_PERCENTILE = 0.75           # Credit spread > 90th percentile
+CRISIS_VIX_PERCENTILE = 0.7          # VIX > 90th percentile
+CRISIS_CS_PERCENTILE = 0.7           # Credit spread > 90th percentile
 CRISIS_WINDOW_MONTHS = 120          # 10-year lookback for percentiles
 CRISIS_LOGIC = "AND"                  # Both VIX AND spread must be high
 CRISIS_MIN_ON = 1                     # Months above threshold to ENTER crisis
-CRISIS_MIN_OFF = 2                  # Months below threshold to EXIT crisis
+CRISIS_MIN_OFF = 3                  # Months below threshold to EXIT crisis
 CRISIS_REDUCTION = 0.5               # Reduce positions by 30% during crisis
 
 

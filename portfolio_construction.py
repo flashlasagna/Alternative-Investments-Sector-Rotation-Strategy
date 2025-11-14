@@ -291,8 +291,8 @@ def _waterfill_to_target(side_weights, target, cap):
     return alloc
 
 
-def apply_position_caps_and_renormalize(weights_raw, L_target=0.20, S_target=0.20, 
-                                        max_long_single=0.15, max_short_single=0.15):
+def apply_position_caps_and_renormalize(weights_raw, L_target=0.2, S_target=0.2, 
+                                        max_long_single=0.25, max_short_single=0.15):
     """
     Apply position caps and renormalize to target gross exposure via water-filling.
     
@@ -337,7 +337,7 @@ def apply_position_caps_and_renormalize(weights_raw, L_target=0.20, S_target=0.2
     return out
 
 
-def scale_to_target_vol(sector_returns, weights, vol_target=0.10, lookback_months=12, smoothing_window=3, crisis_flag=None):
+def scale_to_target_vol(sector_returns, weights, vol_target=0.12, lookback_months=12, smoothing_window=3, crisis_flag=None):
     """
     Scale portfolio weights for target annualized volatility, then smooth with trailing average.
     

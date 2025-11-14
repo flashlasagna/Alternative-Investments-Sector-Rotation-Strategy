@@ -71,10 +71,10 @@ def main():
     # 7b) Apply position caps and renormalize to target (market-neutral: 20L/20S)
     weights_full = apply_position_caps_and_renormalize(
         weights_full,
-        L_target=0.20,            # 20% gross long
-        S_target=0.20,            # 20% gross short (neutral)
-        max_long_single=0.2,     # Max 25% per sector long
-        max_short_single=0.15     # Max 15% per sector short
+        L_target=0.2,            # 30% gross long
+        S_target=0.2,            # 20% gross short (neutral)
+        max_long_single=0.25,     # Max 30% per sector long
+        max_short_single=0.15     # Max 20% per sector short
     )
 
     # 7c) Apply crisis reduction (PHASE 2)

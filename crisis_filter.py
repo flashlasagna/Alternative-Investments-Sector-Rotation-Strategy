@@ -55,11 +55,11 @@ def _rolling_percentile(x: pd.Series, window: int, p: float) -> pd.Series:
 def compute_crisis_flag(vix: pd.Series,
                         credit_spread: pd.Series,
                         window_months: int = 120,
-                        p_vix: float = 0.80,
-                        p_cs: float = 0.80,
+                        p_vix: float = 0.7,
+                        p_cs: float = 0.7,
                         logic: str = "AND",
-                        min_on: int = 2,
-                        min_off: int = 2) -> pd.Series:
+                        min_on: int = 1,
+                        min_off: int = 3) -> pd.Series:
     """
     Detect market crisis periods using trailing percentile thresholds.
     

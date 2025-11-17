@@ -65,21 +65,53 @@ def _standardize_ff_columns(ff: pd.DataFrame) -> pd.DataFrame:
 
 
 # -------------------------- CORE PLOTS (PDF) -------------------------- #
+import matplotlib.pyplot as plt
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
 def plot_equity_curves(df, title="Strategy Cumulative Returns"):
-    (1 + df.fillna(0)).cumprod().plot(title=title, lw=1.3)
+    # Ensure the index is datetime
+    if not pd.api.types.is_datetime64_any_dtype(df.index):
+        df.index = pd.to_datetime(df.index)
+    
+    # Filter dates between 1 Jan 2009 and 31 Dec 2024
+    start_date = "2009-01-01"
+    end_date = "2024-12-31"
+    df_filtered = df.loc[start_date:end_date]
+    
+    # Plot cumulative returns
+    ax = (1 + df_filtered.fillna(0)).cumprod().plot(title=title, lw=1.3)
     plt.ylabel("Growth of $1")
     plt.xlabel("Date")
     plt.grid(True)
+    
+    # Set x-axis ticks yearly from 2009 to 2024
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')  # YS = Year Start
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)  # Show only the year
+    
     plt.tight_layout()
     _savefig_pdf("equity_curve", title)
     plt.show()
 
-
 def plot_drawdown(r, title="Drawdown"):
-    eq = (1 + r).cumprod()
+    
+    start_date = "2010-01-01"
+    end_date = "2024-12-31"
+    r_filtered = r.loc[start_date:end_date]
+    
+    eq = (1 + r_filtered).cumprod()
     dd = eq / eq.cummax() - 1
-    dd.plot(title=title, color="tomato", lw=1.3)
+    
+    ax = dd.plot(title=title, color="tomato", lw=1.3)
     plt.ylabel("Drawdown")
+    plt.xlabel("Date")
+    
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
+    
     plt.tight_layout()
     _savefig_pdf("drawdown", title)
     plt.show()
@@ -87,9 +119,27 @@ def plot_drawdown(r, title="Drawdown"):
 
 def plot_rolling_sharpe(r, window=24):
     title = f"Rolling Sharpe ({window}M)"
+    
+    # Ensure the index is datetime
+    if not pd.api.types.is_datetime64_any_dtype(r.index):
+        r.index = pd.to_datetime(r.index)
+    
+    # Compute rolling Sharpe on full series
     roll_sharpe = (r.rolling(window).mean() / r.rolling(window).std()) * np.sqrt(12)
-    roll_sharpe.plot(title=title, lw=1.3, color="steelblue")
+    
+    # Filter only for plotting from 2010 onwards
+    start_date = "2011-01-01"
+    end_date = "2024-12-31"
+    roll_sharpe_plot = roll_sharpe.loc[start_date:end_date]
+    ax = roll_sharpe_plot.plot(title=title, lw=1.3, color="steelblue")
     plt.axhline(0, color="gray", ls="--")
+    plt.ylabel("Sharpe Ratio")
+    plt.xlabel("Date")
+    # Set x-axis ticks yearly from 2011 to 2024
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
+    
     plt.tight_layout()
     _savefig_pdf(f"rolling_sharpe_w{window}", title)
     plt.show()
@@ -209,17 +259,27 @@ def _cs_ic_series(fcast: pd.DataFrame, rets: pd.DataFrame) -> pd.Series:
 
 def plot_cs_ic(fcast: pd.DataFrame, rets: pd.DataFrame, roll=12, title=None):
     """Cross-sectional IC with rolling mean."""
+    # Compute IC series on full data
     ic = _cs_ic_series(fcast, rets)
-    ax = ic.plot(alpha=0.4, label="Monthly IC")
-    ic.rolling(roll).mean().plot(ax=ax, linewidth=2, label=f"Rolling mean ({roll}m)")
+    start_date = "2011-01-01"
+    end_date = "2024-12-31"
+    ic_plot = ic.loc[start_date:end_date]
+    ax = ic_plot.plot(alpha=0.4, label="Monthly IC")
+    ic_plot.rolling(roll).mean().plot(ax=ax, linewidth=2, label=f"Rolling mean ({roll}m)")
     plt.axhline(0, ls="--", color="gray")
-    m = ic.mean(); s = ic.std(ddof=1); t = m/(s/np.sqrt(ic.dropna().shape[0])) if ic.dropna().shape[0] > 2 else np.nan
+    m = ic.mean()
+    s = ic.std(ddof=1)
+    t = m / (s / np.sqrt(ic.dropna().shape[0])) if ic.dropna().shape[0] > 2 else np.nan
     ttl = title or f"Cross-Sectional IC (mean={m:.3f}, t≈{t:.2f})"
     plt.title(ttl)
     plt.legend()
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
     plt.tight_layout()
     _savefig_pdf("cs_ic", ttl)
     plt.show()
+
 
 
 def _tb_spread_series(fcast: pd.DataFrame, rets: pd.DataFrame, n=3) -> pd.Series:
@@ -242,12 +302,18 @@ def _tb_spread_series(fcast: pd.DataFrame, rets: pd.DataFrame, n=3) -> pd.Series
 
 def plot_top_bottom_spread(fcast: pd.DataFrame, rets: pd.DataFrame, n=3, title=None):
     s = _tb_spread_series(fcast, rets, n=n)
+    start_date = "2010-01-01"
+    end_date = "2024-12-31"
+    s_plot = s.loc[start_date:end_date]
     ann = (1 + s.dropna().mean())**12 - 1 if s.dropna().size else np.nan
-    (1 + s.fillna(0)).cumprod().plot()
+    ax = (1 + s_plot.fillna(0)).cumprod().plot(lw=1.3)
     ttl = title or f"Top-{n} minus Bottom-{n} (ann. mean={ann:.2%})"
     plt.title(ttl)
     plt.axhline(1.0, ls="--", color="gray")
     plt.ylabel("Growth of $1")
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
     plt.tight_layout()
     _savefig_pdf(f"tb_spread_n{n}", ttl)
     plt.show()
@@ -256,35 +322,45 @@ def plot_top_bottom_spread(fcast: pd.DataFrame, rets: pd.DataFrame, n=3, title=N
 def plot_vol_scaling_series(rets: pd.DataFrame, weights: pd.DataFrame, lookback=12, vol_target=0.12, smooth=4):
     """
     Recomputes and plots the same scaling factors implied by your scale_to_target_vol logic.
+    Shows only 2018-2024 in the plot.
     """
     scalers = []
     for t in weights.index:
         if t not in rets.index:
-            scalers.append(1.0); continue
+            scalers.append(1.0)
+            continue
         window = rets.loc[:t].tail(lookback)
         port = window.dot(weights.loc[t])
         sigma = port.std() * np.sqrt(12)
         s = (vol_target / sigma) if sigma and sigma > 0 else 1.0
         s = float(np.clip(s, 0.25, 4.0))
         scalers.append(s)
+
     s = pd.Series(scalers, index=weights.index)
     s_smooth = s.rolling(smooth, min_periods=1, center=True).mean()
-    s.plot(alpha=0.3, label="Scaling")
-    s_smooth.plot(label=f"Smoothed ({smooth})", linewidth=2)
+    start_date = "2018-01-01"
+    end_date = "2024-12-31"
+    s_plot = s.loc[start_date:end_date]
+    s_smooth_plot = s_smooth.loc[start_date:end_date]
+    ax = s_plot.plot(alpha=0.3, label="Scaling")
+    s_smooth_plot.plot(ax=ax, label=f"Smoothed ({smooth})", linewidth=2)
     plt.title("Volatility Target Scaling Factor")
     plt.axhline(1.0, ls="--", color="gray")
+    plt.ylabel("Scaling Factor")
+    plt.xlabel("Date")
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
     plt.legend()
     plt.tight_layout()
     _savefig_pdf("vol_scaling_series", "vol_targeting")
     plt.show()
-
 
 def plot_sector_weights(weights: pd.DataFrame, top_k: int | None = None):
     """
     Stacked area of sector weights over time with signed positions:
       - Top panel: stacked LONG weights (>=0)
       - Bottom panel: stacked SHORT weights (shown below zero)
-    This avoids pandas' area-plot restriction (columns must be all + or all -).
     """
     if weights is None or weights.empty:
         raise ValueError("plot_sector_weights: 'weights' is empty or None.")
@@ -296,9 +372,14 @@ def plot_sector_weights(weights: pd.DataFrame, top_k: int | None = None):
         order = W.abs().mean().sort_values(ascending=False).index[:top_k]
         W = W[order]
 
+    # Filter dates from 2010 to 2024 for plotting
+    start_date = "2010-01-01"
+    end_date = "2024-12-31"
+    W_plot = W.loc[start_date:end_date]
+
     # Split into positive and negative parts
-    W_pos = W.clip(lower=0.0)
-    W_neg_mag = -W.clip(upper=0.0)  # positive magnitudes of shorts
+    W_pos = W_plot.clip(lower=0.0)
+    W_neg_mag = -W_plot.clip(upper=0.0)  # positive magnitudes of shorts
 
     if W_pos.sum().sum() == 0 and W_neg_mag.sum().sum() == 0:
         raise ValueError("plot_sector_weights: all weights are zero over the period.")
@@ -330,6 +411,11 @@ def plot_sector_weights(weights: pd.DataFrame, top_k: int | None = None):
     axes[1].set_ylabel("Magnitude")
     axes[1].set_xlabel("Date")
 
+    # Set x-axis ticks yearly from 2010 to 2024
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    axes[1].set_xticks(years)
+    axes[1].set_xticklabels([year.year for year in years], rotation=45)
+
     plt.tight_layout()
     _savefig_pdf("sector_weights", "long_short_stacked")
     plt.show()
@@ -341,17 +427,35 @@ def _turnover_series(weights: pd.DataFrame) -> pd.Series:
     to = (weights.fillna(0) - w_shift).abs().sum(axis=1)
     return to
 
-
 def plot_turnover(weights: pd.DataFrame):
+    # Compute turnover series on full data
     to = _turnover_series(weights)
-    ax = to.plot(title="Monthly Turnover")
+    
+    # Filter for plotting 2010-01-01 to 2024-12-31
+    start_date = "2010-01-01"
+    end_date = "2024-12-31"
+    to_plot = to.loc[start_date:end_date]
+    
+    # Time series plot
+    ax = to_plot.plot(title="Monthly Turnover", lw=1.3)
+    plt.ylabel("Turnover")
+    plt.xlabel("Date")
+    
+    # Set x-axis ticks yearly from 2010 to 2024
+    years = pd.date_range(start=start_date, end=end_date, freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45)
+    
     plt.tight_layout()
     _savefig_pdf("turnover_timeseries")
     plt.show()
 
+    # Histogram (distribution)
     plt.figure()
-    to.hist(bins=20)
-    plt.title(f"Turnover Distribution (mean={to.mean():.2f}, median={to.median():.2f})")
+    to_plot.hist(bins=20)
+    plt.title(f"Turnover Distribution (mean={to_plot.mean():.2f}, median={to_plot.median():.2f})")
+    plt.xlabel("Turnover")
+    plt.ylabel("Frequency")
     plt.tight_layout()
     _savefig_pdf("turnover_hist")
     plt.show()

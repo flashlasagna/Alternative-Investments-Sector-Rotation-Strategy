@@ -143,7 +143,7 @@ def compute_crisis_flag(vix: pd.Series,
 
 def apply_crisis_reduction(weights: pd.DataFrame,
                            crisis_flag: pd.Series,
-                           reduction: float = 0.50) -> pd.DataFrame:
+                           reduction: float = 0.5) -> pd.DataFrame:
     """
     Scale down portfolio positions during crisis periods.
     

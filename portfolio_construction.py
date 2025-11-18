@@ -28,7 +28,7 @@
         
 # Main knobs => entry_long, exit_long, dwell_min, min_bucket_size. 
                 	# •	Conservative: dwell_min=2–3, min_bucket_size=4
-	                # •	Aggressive (current): dwell_min=1, min_bucket_size=3
+	        
 
 
 # function apply_position_caps_and_renormalize(...)

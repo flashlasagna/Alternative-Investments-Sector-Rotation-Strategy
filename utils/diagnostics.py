@@ -189,17 +189,27 @@ def plot_rolling_alpha(port_df: pd.DataFrame, ff: pd.DataFrame, window: int = 24
 
     alpha_series = pd.Series(alphas, index=idx[window - 1:])
     if title is None:
-        title = f"Rolling Alpha (window={window} months)"
+        title = f"Rolling Alpha (Window={window} months)"
 
-    # Plot (annualized alpha)
+  # Plot (annualized alpha)
     ann_alpha = (1 + alpha_series) ** 12 - 1
-    ann_alpha.plot(title=title)
-    plt.axhline(0.0, ls="--", color="gray")
-    plt.ylabel("Annualized Alpha")
+    # Filter plot to 2011-2024
+    ann_alpha_filtered = ann_alpha.loc['2011':'2024-12']
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ann_alpha_filtered.plot(ax=ax, title=title)
+    ax.axhline(0.0, ls="--", color="gray")
+    ax.set_ylabel("Annualized Alpha")
+    ax.set_xlabel("Date")
+    
+    # Set x-axis to show every year
+    years = pd.date_range(start='2011', end='2024', freq='YS')
+    ax.set_xticks(years)
+    ax.set_xticklabels([year.year for year in years], rotation=45, ha='right')
+    
     plt.tight_layout()
     _savefig_pdf(f"rolling_alpha_w{window}", title)
     plt.show()
-
 
 def plot_factor_exposures(model):
     """Bar chart of factor coefficients from latest regression."""

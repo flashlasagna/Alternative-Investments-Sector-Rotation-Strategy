@@ -80,10 +80,10 @@ def plot_sector_position_counts(weights):
     
     # Count position types for each sector
     n_sectors = len(W.columns)
-    n_cols = 4
+    n_cols = 3
     n_rows = (n_sectors + n_cols - 1) // n_cols
     
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, 4*n_rows))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows))
     axes = axes.flatten()
     
     for idx, sector in enumerate(W.columns):
@@ -133,10 +133,10 @@ def plot_sector_weights_evolution(weights):
     
     # Create a plot for each sector separately
     n_sectors = len(W.columns)
-    n_cols = 4
+    n_cols = 3
     n_rows = (n_sectors + n_cols - 1) // n_cols
     
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, 4*n_rows), sharex=True)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows), sharex=True)
     axes = axes.flatten()  # Flatten in case of 2D array
     
     for idx, sector in enumerate(W.columns):

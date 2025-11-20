@@ -54,7 +54,7 @@ This strategy dynamically rotates between US equity sectors (XLB, XLE, XLF, XLI,
 | **Maximum Drawdown** | -6.72% |
 | **Sortino Ratio** | 1.65 |
 | **Hit Ratio** | 46.88% |
-| **FF5+Mom Alpha** | 3.17% (t=1.91) |
+| **FF5+Mom Alpha** | 3.17% (t=1.98) |
 | **Market Beta** | -0.0518 (near-zero) |
 
 **Crisis Performance**: Strategy reduced positions during 2020 COVID crash and maintained drawdowns below 12% throughout the sample.

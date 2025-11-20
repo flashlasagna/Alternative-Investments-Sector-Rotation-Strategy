@@ -350,7 +350,7 @@ Academic use only. Not intended for live trading without proper risk disclosure 
 
 ## 🙏 Acknowledgments
 
-- **SPDR State Street** - Sector ETF data
+- **Select Sector SPDR** - Sector ETF data
 - **FRED Economic Data** - Macro signals
+- **Datastream** - Macro signals
 - **Kenneth French Data Library** - Factor returns
-

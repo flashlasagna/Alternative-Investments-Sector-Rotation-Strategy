@@ -20,7 +20,7 @@ This strategy dynamically rotates between US equity sectors (XLB, XLE, XLF, XLI,
 **Exposure Model**
 - Rolling sector-level factor exposures using Ridge regression (L2 regularization)
 - 36-month lookback, 24-month minimum for estimation
-- Per-sector forecasts: `r̂ᵢ,ₜ₊₁ = αᵢ,ₜ + βᵢ,ₜ' zₜ`
+- Per-sector forecasts: $`\hat{r}_{i, t+1} = \alpha_{i, t} + \beta_{i, t}^\top z_t`$
 - Optional PCA dimensionality reduction (commented out, configurable)
 
 **Portfolio Construction**

@@ -48,15 +48,14 @@ This strategy dynamically rotates between US equity sectors (XLB, XLE, XLF, XLI,
 
 | Metric | Value |
 |--------|-------|
-| **Annualized Return** | 5.20% |
-| **Annualized Volatility** | 5.56% |
-| **Sharpe Ratio** | 0.46 |
-| **Maximum Drawdown** | -11.81% |
-| **Sortino Ratio** | 0.66 |
-| **Hit Ratio** | 55.4% |
-| **FF5+Mom Alpha** | 2.35% (t=1.91) |
-| **Market Beta** | 0.04 (near-zero) |
-| **Average Turnover** | 0.45/month |
+| **Annualized Return** | 3.17% |
+| **Annualized Volatility** | 4.78% |
+| **Sharpe Ratio** | 0.7082 |
+| **Maximum Drawdown** | -6.72% |
+| **Sortino Ratio** | 1.65 |
+| **Hit Ratio** | 46.88% |
+| **FF5+Mom Alpha** | 3.17% (t=1.91) |
+| **Market Beta** | -0.0518 (near-zero) |
 
 **Crisis Performance**: Strategy reduced positions during 2020 COVID crash and maintained drawdowns below 12% throughout the sample.
 

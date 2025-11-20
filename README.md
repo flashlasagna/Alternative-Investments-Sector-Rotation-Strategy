@@ -323,11 +323,11 @@ Use for production walk-forward without resetting hysteresis.
 
 ```bibtex
 @misc{sector_rotation_2024,
-  author = {Ruben},
+  authors = {Ruben Mimouni, Federica Keni, Jacopo Sinigaglia, Nour Kabbara},
   title = {Macro-Driven Sector Rotation Strategy},
-  year = {2024},
-  institution = {HEC Lausanne - Advanced Data Analytics},
-  supervisor = {Dr. Maria Pia Lombardo}
+  year = {2025},
+  institution = {HEC Lausanne - Applied Investments,
+  supervisor = {Pr. Amit Goyal}
 }
 ```
 

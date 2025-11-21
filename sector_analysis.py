@@ -4,7 +4,7 @@ Sector Analysis Module
 Track which sectors are active and their weight evolution over time.
 
 Usage:
-    Befor running this part you need to run the main file 
+    Before running this part you need to run the main file 
     python sector_analysis.py
 """
 
@@ -35,9 +35,12 @@ from crisis_filter import compute_crisis_flag, apply_crisis_reduction
 
 def plot_sector_activity(weights):
     """Show when each sector is ACTIVE (has non-zero position) vs INACTIVE."""
-    print("\Plotting sector activity (active/inactive)...")
+    print("\nPlotting sector activity (active/inactive)...")
     
-    W = weights.copy().fillna(0.0)
+    # Filter to March 2010 - December 2024
+    start_date = "2010-03-01"
+    end_date = "2024-12-31"
+    W = weights.loc[start_date:end_date].copy().fillna(0.0)
     
     # Binary: 1 if sector has any position, 0 otherwise
     active = (W != 0).astype(int)
@@ -57,33 +60,37 @@ def plot_sector_activity(weights):
     ax.set_yticklabels(active.columns, fontsize=11)
     
     # Set x-axis to show dates
-    x_ticks = np.linspace(0, len(active) - 1, 12, dtype=int)
+    x_ticks = np.linspace(0, len(active) - 1, 15, dtype=int)
     ax.set_xticks(x_ticks)
     ax.set_xticklabels([active.index[i].strftime('%Y-%m') for i in x_ticks], rotation=45, fontsize=10)
     
     ax.set_xlabel('Date', fontsize=12, fontweight='bold')
     ax.set_ylabel('Sector', fontsize=12, fontweight='bold')
-    ax.set_title('Sector Activity Timeline (Green = Active Position, Red = Inactive)', fontsize=14, fontweight='bold')
+    ax.set_title('Sector Activity Timeline (Green = Active Position, Red = Inactive)\nMarch 2010 - December 2024', 
+                 fontsize=14, fontweight='bold')
     
     plt.colorbar(im, ax=ax, label='Active/Inactive')
     plt.tight_layout()
     plt.savefig('figs/sector_activity_timeline.pdf', bbox_inches='tight', dpi=300)
-    print("Saved: figs/sector_activity_timeline.pdf")
+    print("✓ Saved: figs/sector_activity_timeline.pdf")
     plt.show()
 
 
 def plot_sector_position_counts(weights):
     """Show histograms for each sector: months in LONG, SHORT, or NEUTRAL."""
-    print("Plotting sector position histograms...")
+    print("\nPlotting sector position histograms...")
     
-    W = weights.copy().fillna(0.0)
+    # Filter to March 2010 - December 2024
+    start_date = "2010-03-01"
+    end_date = "2024-12-31"
+    W = weights.loc[start_date:end_date].copy().fillna(0.0)
     
     # Count position types for each sector
     n_sectors = len(W.columns)
-    n_cols = 3
+    n_cols = 4
     n_rows = (n_sectors + n_cols - 1) // n_cols
     
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, 4*n_rows))
     axes = axes.flatten()
     
     for idx, sector in enumerate(W.columns):
@@ -117,26 +124,29 @@ def plot_sector_position_counts(weights):
     for idx in range(n_sectors, len(axes)):
         fig.delaxes(axes[idx])
     
-    fig.suptitle('Sector Position Frequency - Months in Each Status', 
+    fig.suptitle('Sector Position Frequency - Months in Each Status\nMarch 2010 - December 2024', 
                  fontsize=15, fontweight='bold', y=0.995)
     plt.tight_layout()
     plt.savefig('figs/sector_position_frequency.pdf', bbox_inches='tight', dpi=300)
-    print("Saved: figs/sector_position_frequency.pdf")
+    print("✓ Saved: figs/sector_position_frequency.pdf")
     plt.show()
 
 
 def plot_sector_weights_evolution(weights):
     """Track individual sector weight evolution over time."""
-    print("Plotting sector weight evolution...")
+    print("\nPlotting sector weight evolution...")
     
-    W = weights.copy().fillna(0.0)
+    # Filter to March 2010 - December 2024
+    start_date = "2010-03-01"
+    end_date = "2024-12-31"
+    W = weights.loc[start_date:end_date].copy().fillna(0.0)
     
     # Create a plot for each sector separately
     n_sectors = len(W.columns)
-    n_cols = 3
+    n_cols = 4
     n_rows = (n_sectors + n_cols - 1) // n_cols
     
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows), sharex=True)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, 4*n_rows), sharex=True)
     axes = axes.flatten()  # Flatten in case of 2D array
     
     for idx, sector in enumerate(W.columns):
@@ -152,6 +162,11 @@ def plot_sector_weights_evolution(weights):
         ax.set_title(f'{sector}', fontsize=12, fontweight='bold')
         ax.set_ylabel('Weight', fontsize=10)
         ax.grid(True, alpha=0.3, axis='y')
+        
+        # Set x-axis ticks to show every 2 years
+        years = pd.date_range(start=start_date, end=end_date, freq='2YS')
+        ax.set_xticks(years)
+        ax.set_xticklabels([year.year for year in years], rotation=45, fontsize=8)
     
     # Remove extra subplots
     for idx in range(n_sectors, len(axes)):
@@ -159,27 +174,32 @@ def plot_sector_weights_evolution(weights):
     
     # Set x-label for bottom plots
     for idx in range(len(axes) - n_cols, len(axes)):
-        if idx < len(axes):
+        if idx < len(axes) and idx < n_sectors:
             axes[idx].set_xlabel('Date', fontsize=10)
     
-    fig.suptitle('Sector Weight Evolution Over Time (Green=Long, Red=Short)', 
+    fig.suptitle('Sector Weight Evolution Over Time (Green=Long, Red=Short)\nMarch 2010 - December 2024', 
                  fontsize=15, fontweight='bold', y=1.00)
     plt.tight_layout()
     plt.savefig('figs/sector_weights_evolution.pdf', bbox_inches='tight', dpi=300)
-    print("Saved: figs/sector_weights_evolution.pdf")
+    print("✓ Saved: figs/sector_weights_evolution.pdf")
     plt.show()
 
 
 def print_sector_summary(weights):
     """Print tables showing sector activity and statistics."""
-
-    print("SECTOR PORTFOLIO SUMMARY")
-   
-    W = weights.copy().fillna(0.0)
+    
+    print("\n" + "="*80)
+    print("SECTOR PORTFOLIO SUMMARY (March 2010 - December 2024)")
+    print("="*80)
+    
+    # Filter to March 2010 - December 2024
+    start_date = "2010-03-01"
+    end_date = "2024-12-31"
+    W = weights.loc[start_date:end_date].copy().fillna(0.0)
     
     # 1. Sector statistics
     print("\nSECTOR STATISTICS:")
-
+    print("-" * 80)
     
     stats = pd.DataFrame({
         'Avg Weight': W.mean(),
@@ -207,12 +227,14 @@ def print_sector_summary(weights):
 
 def main():
     """Main sector analysis pipeline."""
-
+    
+    print("="*80)
     print("SECTOR ANALYSIS - TRACKING PORTFOLIO EVOLUTION")
-
+    print("Period: March 2010 - December 2024")
+    print("="*80)
     
     # Load data
-    print("\nLoading data...")
+    print("\n Loading data...")
     etf_px = load_sector_etf_prices()
     sigs_raw = load_signals()
     vix_monthly = load_vix_monthly()
@@ -240,7 +262,7 @@ def main():
     betas = rolling_sectors_betas(r_full, z_full, lookback_months=LOOKBACK_BETA_MONTHS, min_months=MIN_BETA_MONTHS)
     fcast_full = sector_expected_returns(betas, z_full)
 
-    print("Building portfolio weights...")
+    print(" Building portfolio weights...")
     weights_full, _ = rank_and_weight_from_forecast_hysteresis(
         forecast_df=fcast_full,
         monthly_rets=r_full,
@@ -273,15 +295,21 @@ def main():
         crisis_flag=crisis_flag_full
     )
 
-    # Slice to backtest window
-    weights = weights_full.loc[BACKTEST_START:BACKTEST_END]
+    # Slice to backtest window (March 2010 - December 2024)
+    weights = weights_full.loc["2010-03-01":"2024-12-31"]
     
     # Print summary
     print_sector_summary(weights)
     
     # Generate plots
+    print("\nGenerating visualization plots...")
     plot_sector_position_counts(weights)
     plot_sector_weights_evolution(weights)
+    plot_sector_activity(weights)
+    
+    print("\n" + "="*80)
+    print("SECTOR ANALYSIS COMPLETE")
+    print("="*80)
 
 
 if __name__ == "__main__":

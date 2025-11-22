@@ -80,7 +80,7 @@ ADD_LOG_CG = True
 # Use Ridge regression instead of OLS for rolling betas
 
 USE_RIDGE = True # Set to True to enable Ridge; False uses OLS
-RIDGE_ALPHA = 5  # Regularization strength (higher = more shrinkage)
+RIDGE_ALPHA = 4  # Regularization strength (higher = more shrinkage)
 
 
 

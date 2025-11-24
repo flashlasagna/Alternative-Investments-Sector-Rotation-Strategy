@@ -78,6 +78,8 @@ This strategy dynamically rotates between US equity sectors (XLB, XLE, XLF, XLI,
 │
 ├── sector_analysis.py          # Sector-level diagnostics script
 │
+├── test_ridge_alphas.py        # Regularization strenght test
+│
 ├── utils/
 │   ├── performance.py          # Performance metrics
 │   └── diagnostics.py          # Plotting functions
@@ -167,7 +169,7 @@ DIFF3_COLS = [...]       # 3-month acceleration
 ### Exposure Model
 ```python
 USE_RIDGE = True         # Ridge vs OLS
-RIDGE_ALPHA = 5.0        # Regularization strength
+RIDGE_ALPHA = 4.0        # Regularization strength
 LOOKBACK_BETA_MONTHS = 36
 MIN_BETA_MONTHS = 24
 ```

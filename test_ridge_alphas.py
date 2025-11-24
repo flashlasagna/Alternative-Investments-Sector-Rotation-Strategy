@@ -17,7 +17,7 @@ import subprocess
 import os
 
 # Ridge alphas to test
-RIDGE_ALPHAS_TO_TEST = [0.1, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 15.0, 20.0, 30.0, 50.0]
+RIDGE_ALPHAS_TO_TEST = [0.1, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 11.0, 12.0 ,13.0, 14.0 ,15.0,16.0,17.0, 18.0, 19.0, 20.0,21.0, 22.0, 23.0, 24.0, 25.0, 30.0, 50.0]
 
 
 def run_single_alpha_backtest(ridge_alpha):
@@ -143,8 +143,8 @@ print(f"ALPHA_TSTAT: {{alpha_tstat}}")
                 metrics['error'] = f"Exit code: {result.returncode}"
         
         # Clean up temp script
-        if os.path.exists('_temp_backtest_metrics.py'):
-            os.remove('_temp_backtest_metrics.py')
+        # if os.path.exists('_temp_backtest_metrics.py'):
+        #     os.remove('_temp_backtest_metrics.py')
         
         return metrics
         
@@ -210,7 +210,7 @@ def main():
               f"→ {successful.loc[best_tstat_idx, 'alpha_ann']:.4f} "
               f"(t={successful.loc[best_tstat_idx, 'alpha_tstat']:.2f})")
         
-        print(f"\nResults saved to: {csv_path}")
+        #print(f"\nResults saved to: {csv_path}")
     
     # Show failures
     failed = results_df[results_df['status'] == 'FAILED']
